@@ -64,6 +64,12 @@ mutable struct OPFData
     dvamax::Vector{Float64}  # angle difference max
     branch_status::Vector{Bool}  # branch status
 end
+mutable struct OPFData2
+    ramp_frac::Float64
+    c_up_scale::Float64
+    c_dn_scale::Float64
+    c_sh::Float64
+end
 
 """
     OPFData(network::Dict{String,Any})
