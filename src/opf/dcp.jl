@@ -366,8 +366,8 @@ function extract_dual(opf::OPFModel{DCOPF2})
         # (no bounded bus-level variables)
         # generator
         has_gen = [!isempty(x) for x in data.bus_gens]
-        dual_solution["pgbar"] = dual_solution["kcl_p"][has_gen]
         dual_solution["pg"] = dual.(LowerBoundRef.(model[:pg])) + dual.(UpperBoundRef.(model[:pg]))
+        dual_solution["pgbar"] = dual_solution["kcl_p"][has_gen] .+ dual_solution["pg"]
         # branch
         dual_solution["pf"] = dual.(LowerBoundRef.(model[:pf])) + dual.(UpperBoundRef.(model[:pf]))
     end
