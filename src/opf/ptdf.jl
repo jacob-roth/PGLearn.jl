@@ -15,7 +15,22 @@ struct LazyPTDF <: AbstractPTDF
     BA::SparseMatrixCSC{Float64,Int}  # B*A
     AtBA::SparseMatrixCSC{Float64,Int}  # AᵀBA
 
-    F::SparseArrays.CHOLMOD.Factor{Float64, Int64}  # Factorization of AᵀBA
+    F::Factorization{Float64}#SparseArrays.CHOLMOD.Factor{Float64, Int64}  # Factorization of AᵀBA
+    #=
+    julia> using LinearAlgebra;
+    julia> using SparseArrays;
+    julia> A = sprandn(10,10,0.2);
+    julia> A=A'*A+I;
+    julia> cholesky(A)
+    SuiteSparse.CHOLMOD.Factor{Float64}
+    type:    LLt
+    method:  simplicial
+    maxnnz:  28
+    nnz:     28
+    success: true
+    julia> supertypes(typeof(F))
+    (SuiteSparse.CHOLMOD.Factor{Float64}, Factorization{Float64}, Any)
+    =#
 
     # TODO: cache
 end
