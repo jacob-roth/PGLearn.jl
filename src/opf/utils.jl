@@ -62,7 +62,7 @@ function compute_voltage_phasor_bounds(vfmin, vfmax, vtmin, vtmax, dvamin, dvama
     return wr_min, wr_max, wi_min, wi_max
 end
 
-function extract_metadata(opf::OPFModel{<:AbstractFormulation})
+function extract_metadata(opf::Union{OPFModel{<:AbstractFormulation}, OPFModel2{<:AbstractFormulation}, SCOPFModel{<:AbstractFormulation}})
     model = opf.model
 
     tst = termination_status(model)
@@ -101,5 +101,20 @@ function extract_result(opf::OPFModel{<:AbstractFormulation})
     result["meta"] = extract_metadata(opf)
     result["primal"] = extract_primal(opf)
     result["dual"] = extract_dual(opf)
+    return result
+end
+
+function extract_result(opf::OPFModel2{<:AbstractFormulation})
+    result = Dict{String,Any}()
+    result["meta"] = extract_metadata(opf)
+    result["primal"] = extract_primal(opf)
+    result["dual"] = extract_dual(opf)
+    return result
+end
+function extract_result(scopf::SCOPFModel{<:AbstractFormulation})
+    result = Dict{String,Any}()
+    result["meta"] = extract_metadata(scopf)
+    result["primal"] = extract_primal(scopf)
+    result["dual"] = extract_dual(scopf)
     return result
 end

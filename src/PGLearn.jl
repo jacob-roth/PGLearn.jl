@@ -9,6 +9,9 @@ const PM = PowerModels
 using PGLib
 using JuMP
 
+using CQK
+using CVaRUtilities
+
 import Random: rand, rand!
 
 export load_json, save_json, load_h5, save_h5
@@ -22,6 +25,9 @@ include("config.jl")
 
 # OPF formulations
 include("opf/opf.jl")
+
+# SCOPF formulation
+include("opf/scdcopf.jl")
 
 include("bridges.jl")
 include("process.jl")

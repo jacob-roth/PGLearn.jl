@@ -305,7 +305,17 @@ mutable struct OPFModel{OPF <: AbstractFormulation}
     data::OPFData
     model::JuMP.GenericModel
 end
-
+mutable struct OPFModel2{OPF <: AbstractFormulation} # opf model for second stage
+    data::OPFData
+    data2::OPFData2
+    model::JuMP.GenericModel
+end
+mutable struct SCOPFModel{OPF <: AbstractFormulation} # scopf model (first + second stage)
+    data::OPFData
+    xi_data::Vector{OPFModel2}
+    model::JuMP.GenericModel
+    helper
+end
 include("utils.jl")
 include("ptdf.jl")
 
@@ -320,7 +330,7 @@ const SUPPORTED_OPF_MODELS = Type{<:AbstractFormulation}[
     ACOPF,
     DCOPF,
     EconomicDispatch,
-    SOCOPFQuad,
+     SOCOPFQuad,
     SOCOPF,
     SDPOPF,
 ]
@@ -330,6 +340,8 @@ const SUPPORTED_OPF_MODELS = Type{<:AbstractFormulation}[
 const OPF2TYPE = Dict{String,Type{<:AbstractFormulation}}(
     "ACOPF" => ACOPF,
     "DCOPF" => DCOPF,
+    # "DCOPF2" => DCOPF2,
+    # "SCDCOPF" => SCDCOPF,
     "EconomicDispatch" => EconomicDispatch,
     "SOCOPFQuad" => SOCOPFQuad,
     "SOCOPF" => SOCOPF,

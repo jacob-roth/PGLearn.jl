@@ -1,5 +1,5 @@
 struct DCOPF <: AbstractFormulation end
-struct DCOPF2 <: AbstractFormulation end
+struct DCOPF2 <: AbstractFormulation end # DCOPF second stage
 
 """
     build_opf(DCOPF, data, optimizer)
@@ -90,7 +90,7 @@ function build_opf(::Type{DCOPF}, data::OPFData, optimizer;
     return OPFModel{DCOPF}(data, model)
 end
 
-function build_opf2(::Type{DCOPF2}, data::OPFData, data2::OPFData2, optimizer;
+function build_opf(::Type{DCOPF2}, data::OPFData, data2::OPFData2, optimizer;
     T=Float64,
 )
     # Grab some data
@@ -193,7 +193,7 @@ function build_opf2(::Type{DCOPF2}, data::OPFData, data2::OPFData2, optimizer;
         )
     )
 
-    return OPFModel{DCOPF2}(data, model)
+    return OPFModel2{DCOPF2}(data, data2, model)
 end
 
 
@@ -280,7 +280,7 @@ function extract_dual(opf::OPFModel{DCOPF})
     return dual_solution
 end
 
-function extract_primal(opf::OPFModel{DCOPF2})
+function extract_primal(opf::OPFModel2{DCOPF2})
     model = opf.model
     T = JuMP.value_type(typeof(model))
 
@@ -315,7 +315,7 @@ function extract_primal(opf::OPFModel{DCOPF2})
     return primal_solution
 end
 
-function extract_dual(opf::OPFModel{DCOPF2})
+function extract_dual(opf::OPFModel2{DCOPF2})
     model = opf.model
     T = JuMP.value_type(typeof(model))
 
