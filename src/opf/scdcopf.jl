@@ -7,12 +7,9 @@ function make_stage_2(data::PGLearn.OPFData, data2::PGLearn.OPFData2, solver=Ipo
 end
 function solve_stage_2!(gV::AbstractVector, pg::AbstractVector, pg_model_2::PGLearn.OPFModel2{PGLearn.DCOPF2})
   set_parameter_value.(pg_model_2.model[:pgbar], pg);
-  # solve
-  # PGLearn.solve!(pg_model_2)
-  optimize!(pg_model_2.model)
-  # res = PGLearn.extract_result(pg_model_2)
-  V = objective_value(pg_model_2.model)
-  gV .= PGLearn.extract_result(pg_model_2)["dual"]["pgbar"]
+  optimize!(pg_model_2.model);
+  V = objective_value(pg_model_2.model);
+  gV .= dual.(pg_model_2.model[:redispatch]);
   return V, gV
 end
 function solve_stage_2(pg::AbstractVector, pg_model_2::PGLearn.OPFModel2{PGLearn.DCOPF2})
@@ -127,20 +124,22 @@ function build_scopf(
 
   function _C_V_val(x...)
     xvec = collect(x)
-    v = CVaRUtilities.update!(CVO, xvec, Xi; order=0, force=false)
+    v = CVaRUtilities.update!(CVO, xvec, Xi; order=0, force=true)
     return v
   end
   function _C_V_grad(g::AbstractVector, x...)
     xvec = collect(x)
-    CVaRUtilities.update!(CVO, xvec, Xi; order=1, force=false)
+    CVaRUtilities.update!(CVO, xvec, Xi; order=1, force=true)
     g .= CVO.g_cache
+    # println("g=", g)
     return
   end
   function _C_V_hess(H::AbstractMatrix, x...)
     xvec = collect(x)
-    CVaRUtilities.update!(CVO, xvec, Xi; order=2, force=false)
+    CVaRUtilities.update!(CVO, xvec, Xi; order=2, force=true)
     for j in 1:n, i in j:n # lower triangle
       H[i,j] = CVO.H_cache[i,j]
+      # println("H[$i,$j]=", H[i,j])
     end
     return
   end
@@ -384,12 +383,12 @@ function build_scopf(
   # III. objective
   #
   
-  total_first_stage_cost = sum(c1_1[g] * pg_1[g] + c0_1[g] for g in 1:G_1 if gen_status_1[g])
+  @expression(model, total_first_stage_cost, sum(c1_1[g] * pg_1[g] + c0_1[g] for g in 1:G_1 if gen_status_1[g]))
   
   @variable(model, z[i=1:S] >= 0)
   @variable(model, tau)
   z_cost = @constraint(model, z .>= second_stage_cost .- tau)
-  total_second_stage_cost = tau + sum(p .* z)/(1-alpha)
+  @expression(model, total_second_stage_cost, tau + sum(p .* z)/(1-alpha))
   
   @objective(model, Min, total_first_stage_cost + total_second_stage_cost)
   
@@ -426,6 +425,8 @@ function extract_primal(opf::SCOPFModel{SCDCOPF_DE})
         prim["z"] = value.(model[:z])
         prim["tau"] = value(model[:tau])
         prim["second_stage_cost"] = value.(model[:second_stage_cost])
+        prim["total_second_stage_cost"] = value(model[:total_second_stage_cost])
+        prim["total_first_stage_cost"] = value(model[:total_first_stage_cost])
     else
         prim["va_1"] = zeros(T, data.N)
         prim["pg_1"] = zeros(T, data.G)
@@ -433,6 +434,8 @@ function extract_primal(opf::SCOPFModel{SCDCOPF_DE})
         prim["z"] = zeros(T, S)
         prim["tau"] = zero(T)
         prim["second_stage_cost"] = zeros(T, S)
+        prim["total_second_stage_cost"] = zero(T)
+        prim["total_first_stage_cost"] = zero(T)
     end
 
     # -------------------- stage-2 (per scenario) -----
