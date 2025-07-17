@@ -137,6 +137,7 @@ function build_scopf(
   function _C_V_hess(H::AbstractMatrix, x...)
     xvec = collect(x)
     CVaRUtilities.update!(CVO, xvec, Xi; order=2, force=true)
+    # println("||H||", norm(CVO.H_cache))
     for j in 1:n, i in j:n # lower triangle
       H[i,j] = CVO.H_cache[i,j]
       # println("H[$i,$j]=", H[i,j])
